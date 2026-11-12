@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Puzzle Rumah Ibadah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#E8F3F1;--card:#FFFFFF;--ink:#12343B;--muted:#4F6C72;--line:#B9D5D1;--acc:#1F7A8C;--acc-ink:#FFFFFF;--gold:#E2A400;--ok:#1E8A4C;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0F2327;--card:#17353B;--ink:#E7F4F2;--muted:#9CBDC2;--line:#2A5058;--acc:#5CC3D6;--acc-ink:#0F2327;--ok:#4CC783}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0F2327;--card:#17353B;--ink:#E7F4F2;--muted:#9CBDC2;--line:#2A5058;--acc:#5CC3D6;--acc-ink:#0F2327;--ok:#4CC783}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:600 17px/1.45 "Nunito",system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+main{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:clamp(28px,7vw,38px);line-height:1.05;margin:0;font-weight:800}
+.sub{color:var(--muted);margin:6px 0 16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px}
+.chip{flex:none;width:76px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px;font-size:13px;font-weight:700;text-align:center}
+.chip svg{width:100%;aspect-ratio:1;display:block;border-radius:7px;margin-bottom:3px}
+.chip[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 12px}
+.seg{display:flex;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:var(--card);padding:7px 14px;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink)}
+.btn{background:var(--card);border:2px solid var(--line);border-radius:10px;padding:7px 14px;font-weight:700}
+.btn.p{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:6px 10px;text-align:center}
+.stat small{display:block;color:var(--muted);font-size:13px}.stat b{font-size:22px;font-weight:800}
+#board{position:relative;width:100%;max-width:460px;aspect-ratio:1;margin:0 auto;background:var(--line);border-radius:14px;overflow:hidden;touch-action:manipulation}
+.tile{position:absolute;padding:2px;cursor:pointer;transition:left .14s ease,top .14s ease;background:none}
+.tile svg{width:100%;height:100%;display:block;border-radius:6px}
+.tile:focus-visible{outline-offset:-4px}
+#full{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .35s;background:var(--card)}
+#full.on{opacity:1}#full svg{width:100%;height:100%;display:block}
+#msg{display:none;margin-top:16px;background:var(--card);border:2px solid var(--ok);border-radius:14px;padding:16px}
+#msg.on{display:block}#msg h2{margin:0 0 6px;font-size:24px;font-weight:800}#msg p{margin:0 0 12px}
+details{margin-top:18px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{font-weight:800;cursor:pointer}details ol{margin:10px 0 0;padding-left:20px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
+<main>
+  <h1>Puzzle Rumah Ibadah</h1>
+  <p class="sub">Geser kepingan sampai gambar tempat ibadah utuh kembali.</p>
+  <div class="chips" id="chips" role="group" aria-label="Pilih gambar"></div>
+  <div class="row">
+    <div class="seg" role="group" aria-label="Ukuran"><button id="s3" aria-pressed="true">3 × 3</button><button id="s4" aria-pressed="false">4 × 4</button></div>
+    <button class="btn p" id="shuf">Acak ulang</button><button class="btn" id="peek" aria-pressed="false">Intip gambar</button>
+  </div>
+  <div class="stats"><div class="stat"><small>Langkah</small><b id="vm">0</b></div><div class="stat"><small>Waktu</small><b id="vt">0:00</b></div><div class="stat"><small>Terbaik</small><b id="vb">–</b></div></div>
+  <div id="board"><div id="full"></div></div>
+  <div id="msg" role="status"><h2 id="mh"></h2><p id="mp"></p><button class="btn p" id="nx">Gambar berikutnya</button></div>
+  <details><summary>Cara main</summary><ol>
+    <li>Pilih salah satu gambar rumah ibadah dan ukuran puzzle.</li>
+    <li>Ketuk kepingan di samping kotak kosong untuk menggesernya. Di komputer kamu juga bisa memakai tombol panah.</li>
+    <li>Susun semua kepingan sampai gambarnya utuh. Makin sedikit langkah, makin bagus.</li>
+    <li>Bingung? Tekan “Intip gambar” untuk melihat gambar aslinya.</li></ol></details>
+</main>
+<script>
+var S=[
+{n:"Masjid",f:"Masjid adalah tempat ibadah umat Islam, dikenal dari kubah dan menaranya. Di sini umat Muslim salat berjamaah.",
+ v:'<rect width="300" height="300" fill="#9ED8F5"/><circle cx="245" cy="55" r="22" fill="#FFE08A"/><rect y="235" width="300" height="65" fill="#6FB36B"/><rect x="30" y="115" width="26" height="125" fill="#F4EBD8"/><path d="M26 115l17-45 17 45z" fill="#1FA38F"/><rect x="244" y="115" width="26" height="125" fill="#F4EBD8"/><path d="M240 115l17-45 17 45z" fill="#1FA38F"/><rect x="75" y="175" width="150" height="65" fill="#F4EBD8"/><path d="M90 175a60 60 0 0 1 120 0z" fill="#1FA38F"/><rect x="147" y="97" width="6" height="16" fill="#C9A227"/><circle cx="150" cy="90" r="9" fill="#C9A227"/><circle cx="154" cy="88" r="8" fill="#9ED8F5"/><path d="M135 240v-30a15 15 0 0 1 30 0v30z" fill="#7A4B2A"/>'},
+{n:"Gereja",f:"Gereja adalah tempat ibadah umat Kristen, ditandai menara dan salib. Di sini jemaat berdoa dan bernyanyi bersama.",
+ v:'<rect width="300" height="300" fill="#B7D9F2"/><circle cx="55" cy="55" r="20" fill="#FFF3B0"/><rect y="235" width="300" height="65" fill="#78B36A"/><rect x="75" y="155" width="150" height="85" fill="#F2E9E1"/><path d="M65 155l85-50 85 50z" fill="#B5523B"/><rect x="125" y="70" width="50" height="85" fill="#F2E9E1"/><path d="M118 70l32-42 32 42z" fill="#6B4A3A"/><rect x="147" y="2" width="6" height="28" fill="#E2A400"/><rect x="139" y="10" width="22" height="6" fill="#E2A400"/><path d="M136 240v-32a14 14 0 0 1 28 0v32z" fill="#6B4A3A"/><circle cx="150" cy="105" r="10" fill="#7FB8E0"/><rect x="90" y="185" width="18" height="28" rx="9" fill="#7FB8E0"/><rect x="192" y="185" width="18" height="28" rx="9" fill="#7FB8E0"/>'},
+{n:"Pura",f:"Pura adalah tempat ibadah umat Hindu, dengan atap meru bertingkat dan gerbang batu. Di sini umat Hindu bersembahyang.",
+ v:'<rect width="300" height="300" fill="#FFD9A8"/><circle cx="150" cy="150" r="70" fill="#FFB36B" opacity=".5"/><rect y="238" width="300" height="62" fill="#5E9B5B"/><rect x="18" y="165" width="42" height="75" fill="#C9B79C"/><rect x="26" y="145" width="26" height="22" fill="#B5A285"/><rect x="240" y="165" width="42" height="75" fill="#C9B79C"/><rect x="248" y="145" width="26" height="22" fill="#B5A285"/><rect x="100" y="205" width="100" height="35" fill="#C9B79C"/><path d="M72 205l78-32 78 32z" fill="#4A3B32"/><rect x="122" y="178" width="56" height="12" fill="#C9B79C"/><path d="M98 180l52-30 52 30z" fill="#4A3B32"/><path d="M122 153l28-28 28 28z" fill="#4A3B32"/><rect x="148" y="100" width="4" height="26" fill="#4A3B32"/><rect x="132" y="215" width="36" height="25" fill="#5B4636"/>'},
+{n:"Vihara",f:"Vihara adalah tempat ibadah umat Buddha. Stupa menjadi lambang kedamaian dan pencerahan.",
+ v:'<rect width="300" height="300" fill="#CFE8F7"/><circle cx="60" cy="60" r="24" fill="#FFF3B0"/><rect y="238" width="300" height="62" fill="#7DBA6E"/><rect x="60" y="222" width="180" height="18" fill="#B8AC98"/><rect x="78" y="205" width="144" height="17" fill="#CDC2AE"/><path d="M92 205a58 58 0 0 1 116 0z" fill="#E2A400"/><rect x="136" y="132" width="28" height="16" fill="#C98F00"/><path d="M138 132l12-40 12 40z" fill="#E2A400"/><circle cx="150" cy="86" r="6" fill="#C98F00"/><path d="M135 205v-18a15 15 0 0 1 30 0v18z" fill="#8A5A00"/>'},
+{n:"Klenteng",f:"Klenteng adalah tempat ibadah umat Konghucu, dikenal dari warna merah, atap melengkung, dan lampion.",
+ v:'<rect width="300" height="300" fill="#FFE3D0"/><circle cx="240" cy="55" r="22" fill="#FFF3B0"/><rect y="238" width="300" height="62" fill="#8DB36B"/><rect x="70" y="170" width="160" height="70" fill="#C0392B"/><path d="M40 172q110-70 220 0l-10 12q-100-52-200 0z" fill="#E2A400"/><path d="M85 150q65-35 130 0l-8 10q-57-26-114 0z" fill="#C98F00"/><rect x="125" y="195" width="50" height="45" fill="#7A1F16"/><circle cx="92" cy="208" r="11" fill="#FFD34D"/><circle cx="208" cy="208" r="11" fill="#FFD34D"/><rect x="90" y="190" width="4" height="8" fill="#7A1F16"/><rect x="206" y="190" width="4" height="8" fill="#7A1F16"/><circle cx="150" cy="140" r="5" fill="#E2A400"/>'}
+];
+var $=function(i){return document.getElementById(i)},board=$("board");
+var sc=0,n=3,g=[],els={},mv=0,t0=0,tm=null,done=false;
+$("defs").innerHTML=S.map(function(s,i){return'<g id="sc'+i+'">'+s.v+"</g>"}).join("");
+function use(i,vb){return'<svg viewBox="'+vb+'" aria-hidden="true"><use href="#sc'+i+'"/></svg>'}
+$("chips").innerHTML=S.map(function(s,i){return'<button class="chip" data-i="'+i+'" aria-pressed="'+(i===sc)+'">'+use(i,"0 0 300 300")+s.n+"</button>"}).join("");
+$("full").innerHTML=use(0,"0 0 300 300");
+function nb(i){var r=i/n|0,c=i%n,a=[];if(r>0)a.push(i-n);if(r<n-1)a.push(i+n);if(c>0)a.push(i-1);if(c<n-1)a.push(i+1);return a}
+function key(){return"pz-"+sc+"-"+n}
+function best(){try{return localStorage.getItem(key())}catch(e){return null}}
+function stats(){$("vm").textContent=mv;var s=t0?Math.floor((Date.now()-t0)/1000):0;$("vt").textContent=(s/60|0)+":"+("0"+s%60).slice(-2);var b=best();$("vb").textContent=b||"–"}
+function newGame(){clearInterval(tm);done=false;mv=0;t0=0;var N=n*n,e=N-1,last=-1;g=[];for(var i=0;i<N;i++)g.push(i);
+  for(var k=0;k<N*40;k++){var o=nb(e).filter(function(x){return x!==last}),m=o[Math.random()*o.length|0];g[e]=g[m];g[m]=N-1;last=e;e=m}
+  if(g.every(function(v,i){return v===i}))return newGame();
+  board.querySelectorAll(".tile").forEach(function(t){t.remove()});els={};var s=300/n;
+  for(var id=0;id<N-1;id++){var d=document.createElement("button");d.className="tile";d.dataset.id=id;
+    d.style.width=d.style.height=100/n+"%";d.setAttribute("aria-label","Kepingan "+(id+1));
+    d.innerHTML=use(sc,(id%n)*s+" "+(Math.floor(id/n))*s+" "+s+" "+s);board.insertBefore(d,$("full"));els[id]=d;
+    d.onclick=(function(x){return function(){move(g.indexOf(x))}})(id)}
+  $("full").innerHTML=use(sc,"0 0 300 300");$("full").classList.remove("on");$("peek").setAttribute("aria-pressed","false");
+  $("msg").classList.remove("on");place();stats()}
+function place(){for(var i=0;i<g.length;i++){var el=els[g[i]];if(el){el.style.left=(i%n)*100/n+"%";el.style.top=(i/n|0)*100/n+"%"}}}
+function move(c){if(done||c<0)return;var e=g.indexOf(n*n-1);if(nb(e).indexOf(c)<0)return;
+  g[e]=g[c];g[c]=n*n-1;mv++;if(!t0){t0=Date.now();tm=setInterval(stats,1000)}place();stats();
+  if(g.every(function(v,i){return v===i}))win()}
+function win(){done=true;clearInterval(tm);var b=best();try{if(!b||mv<+b)localStorage.setItem(key(),mv)}catch(e){}stats();
+  $("full").classList.add("on");$("mh").textContent="Selesai! Ini "+S[sc].n+" 🎉";
+  $("mp").textContent=S[sc].f+" Semua rumah ibadah mengajarkan kebaikan dan saling menghormati.";$("msg").classList.add("on");$("msg").scrollIntoView({behavior:"smooth",block:"nearest"})}
+function pick(i){sc=i;document.querySelectorAll(".chip").forEach(function(b){b.setAttribute("aria-pressed",+b.dataset.i===i)});newGame()}
+function size(k){n=k;$("s3").setAttribute("aria-pressed",k===3);$("s4").setAttribute("aria-pressed",k===4);newGame()}
+document.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){pick(+b.dataset.i)}});
+$("s3").onclick=function(){size(3)};$("s4").onclick=function(){size(4)};$("shuf").onclick=newGame;
+$("peek").onclick=function(){if(done)return;var f=$("full");f.classList.toggle("on");this.setAttribute("aria-pressed",f.classList.contains("on"))};
+$("nx").onclick=function(){pick((sc+1)%S.length)};
+document.addEventListener("keydown",function(e){var m={ArrowUp:[n,1],ArrowDown:[-n,1],ArrowLeft:[1,0],ArrowRight:[-1,0]}[e.key];if(!m)return;e.preventDefault();
+  var em=g.indexOf(n*n-1),c=em+m[0];if(m[1]===0&&Math.floor(c/n)!==Math.floor(em/n))return;if(c<0||c>=n*n)return;move(c)});
+newGame();
+</script>
+</body>
+</html>
